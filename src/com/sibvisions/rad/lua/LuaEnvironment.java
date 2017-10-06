@@ -16,7 +16,6 @@
 
 package com.sibvisions.rad.lua;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +30,6 @@ import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
-import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.CoerceLuaToJava;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
@@ -89,7 +87,6 @@ public class LuaEnvironment
 		globals.load(new JseMathLib());
 		
 		globals.load(new JVxLib());
-		globals.set("value", CoerceJavaToLua.coerce(new BigDecimal("-5.1234")));
 		
 		globals.load(new GuiLib(UIFactoryManager.getFactory()));
 	}
