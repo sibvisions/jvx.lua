@@ -16,12 +16,6 @@
 
 package com.sibvisions.rad.lua.libs;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.rad.genui.UIColor;
 import javax.rad.genui.UICursor;
 import javax.rad.genui.UIDimension;
@@ -66,13 +60,10 @@ import javax.rad.genui.menu.UIMenuItem;
 import javax.rad.genui.menu.UIPopupMenu;
 import javax.rad.genui.menu.UISeparator;
 
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.TwoArgFunction;
-import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 
-import com.sibvisions.rad.lua.libs.functions.ConstructorInvokingFunction;
-import com.sibvisions.rad.lua.libs.functions.StaticFunctionInvokingFunction;
+import com.sibvisions.rad.lua.CoerceClass;
 
 /**
  * The {@link JVxLib} provides all JVx GUI elements.
@@ -103,148 +94,56 @@ public class JVxLib extends TwoArgFunction
 	@Override
 	public LuaValue call(LuaValue pValue, LuaValue pEnv)
 	{
-		coerceClass(UIButton.class, pEnv);
-		coerceClass(UICheckBox.class, pEnv);
-		coerceClass(UIIcon.class, pEnv);
-		coerceClass(UILabel.class, pEnv);
-		coerceClass(UIPasswordField.class, pEnv);
-		coerceClass(UIRadioButton.class, pEnv);
-		coerceClass(UITextArea.class, pEnv);
-		coerceClass(UITextField.class, pEnv);
-		coerceClass(UIToggleButton.class, pEnv);
+		CoerceClass.load(UIButton.class, pEnv);
+		CoerceClass.load(UICheckBox.class, pEnv);
+		CoerceClass.load(UIIcon.class, pEnv);
+		CoerceClass.load(UILabel.class, pEnv);
+		CoerceClass.load(UIPasswordField.class, pEnv);
+		CoerceClass.load(UIRadioButton.class, pEnv);
+		CoerceClass.load(UITextArea.class, pEnv);
+		CoerceClass.load(UITextField.class, pEnv);
+		CoerceClass.load(UIToggleButton.class, pEnv);
 		
-		coerceClass(UIDesktopPanel.class, pEnv);
-		coerceClass(UIFrame.class, pEnv);
-		coerceClass(UIGroupPanel.class, pEnv);
-		coerceClass(UIInternalFrame.class, pEnv);
-		coerceClass(UIPanel.class, pEnv);
-		coerceClass(UIScrollPanel.class, pEnv);
-		coerceClass(UISplitPanel.class, pEnv);
-		coerceClass(UITabsetPanel.class, pEnv);
-		coerceClass(UIToolBar.class, pEnv);
-		coerceClass(UIToolBarPanel.class, pEnv);
-		coerceClass(UIWindow.class, pEnv);
+		CoerceClass.load(UIDesktopPanel.class, pEnv);
+		CoerceClass.load(UIFrame.class, pEnv);
+		CoerceClass.load(UIGroupPanel.class, pEnv);
+		CoerceClass.load(UIInternalFrame.class, pEnv);
+		CoerceClass.load(UIPanel.class, pEnv);
+		CoerceClass.load(UIScrollPanel.class, pEnv);
+		CoerceClass.load(UISplitPanel.class, pEnv);
+		CoerceClass.load(UITabsetPanel.class, pEnv);
+		CoerceClass.load(UIToolBar.class, pEnv);
+		CoerceClass.load(UIToolBarPanel.class, pEnv);
+		CoerceClass.load(UIWindow.class, pEnv);
 		
-		coerceClass(UICellFormat.class, pEnv);
-		coerceClass(UIChart.class, pEnv);
-		coerceClass(UIEditor.class, pEnv);
-		coerceClass(UITable.class, pEnv);
-		coerceClass(UITree.class, pEnv);
+		CoerceClass.load(UICellFormat.class, pEnv);
+		CoerceClass.load(UIChart.class, pEnv);
+		CoerceClass.load(UIEditor.class, pEnv);
+		CoerceClass.load(UITable.class, pEnv);
+		CoerceClass.load(UITree.class, pEnv);
 		
-		coerceClass(UIBorderLayout.class, pEnv);
-		coerceClass(UIFlowLayout.class, pEnv);
-		coerceClass(UIFormLayout.class, pEnv);
-		coerceClass(UIGridLayout.class, pEnv);
+		CoerceClass.load(UIBorderLayout.class, pEnv);
+		CoerceClass.load(UIFlowLayout.class, pEnv);
+		CoerceClass.load(UIFormLayout.class, pEnv);
+		CoerceClass.load(UIGridLayout.class, pEnv);
 		
-		coerceClass(UIMenu.class, pEnv);
-		coerceClass(UIMenuBar.class, pEnv);
-		coerceClass(UIMenuItem.class, pEnv);
-		coerceClass(UIPopupMenu.class, pEnv);
-		coerceClass(UISeparator.class, pEnv);
+		CoerceClass.load(UIMenu.class, pEnv);
+		CoerceClass.load(UIMenuBar.class, pEnv);
+		CoerceClass.load(UIMenuItem.class, pEnv);
+		CoerceClass.load(UIPopupMenu.class, pEnv);
+		CoerceClass.load(UISeparator.class, pEnv);
 		
-		coerceClass(UIColor.class, pEnv);
-		coerceClass(UICursor.class, pEnv);
-		coerceClass(UIDimension.class, pEnv);
-		coerceClass(UIFont.class, pEnv);
-		coerceClass(UIImage.class, pEnv);
-		coerceClass(UIInsets.class, pEnv);
-		coerceClass(UILayout.class, pEnv);
-		coerceClass(UIPoint.class, pEnv);
-		coerceClass(UIRectangle.class, pEnv);
+		CoerceClass.load(UIColor.class, pEnv);
+		CoerceClass.load(UICursor.class, pEnv);
+		CoerceClass.load(UIDimension.class, pEnv);
+		CoerceClass.load(UIFont.class, pEnv);
+		CoerceClass.load(UIImage.class, pEnv);
+		CoerceClass.load(UIInsets.class, pEnv);
+		CoerceClass.load(UILayout.class, pEnv);
+		CoerceClass.load(UIPoint.class, pEnv);
+		CoerceClass.load(UIRectangle.class, pEnv);
 		
 		return LuaValue.NIL;
-	}
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// User-defined methods
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
-	/**
-	 * Coerces the given {@link Class} into the given {@link LuaValue
-	 * environment}.
-	 * 
-	 * @param pClass the {@link Class} to coerce.
-	 * @param pEnv the target {@link LuaValue environment}.
-	 */
-	private static final void coerceClass(Class<?> pClass, LuaValue pEnv)
-	{
-		LuaValue coercedClass = new LuaTable();
-		coercedClass.set("new", new ConstructorInvokingFunction(pClass));
-		
-		coerceStaticMethods(pClass, coercedClass);
-		coerceStaticFields(pClass, coercedClass);
-		
-		pEnv.set(pClass.getSimpleName(), coercedClass);
-	}
-	
-	/**
-	 * Adds all static fields of the given {@link Class} to the given
-	 * {@link LuaValue target}.
-	 * 
-	 * @param pClass the {@link Class}.
-	 * @param pTarget the {@link LuaValue target}.
-	 */
-	private static final void coerceStaticFields(Class<?> pClass, LuaValue pTarget)
-	{
-		for (Field field : pClass.getFields())
-		{
-			if ((field.getModifiers() & Modifier.PUBLIC) == Modifier.PUBLIC
-					&& (field.getModifiers() & Modifier.FINAL) == Modifier.FINAL
-					&& (field.getModifiers() & Modifier.STATIC) == Modifier.STATIC)
-			{
-				try
-				{
-					pTarget.set(field.getName(), CoerceJavaToLua.coerce(field.get(null)));
-				}
-				catch (IllegalArgumentException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				catch (IllegalAccessException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		// Workaround for Java Bug #9050649.
-		for (Class<?> interfaze : pClass.getInterfaces())
-		{
-			coerceStaticFields(interfaze, pTarget);
-		}
-		
-		if (pClass.getSuperclass() != null)
-		{
-			coerceStaticFields(pClass.getSuperclass(), pTarget);
-		}
-	}
-	
-	/**
-	 * Adds all static methods of the given {@link Class} to the given
-	 * {@link LuaValue target}.
-	 * 
-	 * @param pClass the {@link Class}.
-	 * @param pTarget the {@link LuaValue target}.
-	 */
-	private static final void coerceStaticMethods(Class<?> pClass, LuaValue pTarget)
-	{
-		Set<String> staticMethodNames = new HashSet<>();
-		
-		for (Method method : pClass.getMethods())
-		{
-			if ((method.getModifiers() & Modifier.PUBLIC) == Modifier.PUBLIC
-					&& (method.getModifiers() & Modifier.STATIC) == Modifier.STATIC)
-			{
-				staticMethodNames.add(method.getName());
-			}
-		}
-		
-		for (String staticMethodName : staticMethodNames)
-		{
-			pTarget.set(staticMethodName, new StaticFunctionInvokingFunction(pClass, staticMethodName));
-		}
 	}
 	
 }	// JVxLib

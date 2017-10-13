@@ -14,54 +14,53 @@
  * the License.
  */
 
-package com.sibvisions.rad.lua.libs.functions;
+package com.sibvisions.rad.lua.support.functions;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.luaj.vm2.LuaError;
-import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.VarArgFunction;
+import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.CoerceLuaToJava;
 
-import com.sibvisions.rad.lua.libs.wrappers.EventHandlerInterceptingWrapper;
-
 /**
- * The {@link ConstructorInvokingFunction} is a {@link VarArgFunction} extension
- * which calls the best fitting constructor.
+ * The {@link StaticFunctionInvokingFunction} is a {@link VarArgFunction} which
+ * invokes the best fitting static function on an object.
  * 
  * @author Robert Zenz
  */
-public class ConstructorInvokingFunction extends VarArgFunction
+public class StaticFunctionInvokingFunction extends VarArgFunction
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Class members
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
-	/** The array of available {@link Constructor}s. */
-	private Constructor<?>[] constructors = null;
+	/** The {@link Method}s. */
+	private List<Method> methods = new ArrayList<>();
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Initialization
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
 	/**
-	 * Creates a new instance of {@link ConstructorInvokingFunction}.
+	 * Creates a new instance of {@link StaticFunctionInvokingFunction}.
 	 *
-	 * @param pClazz the {@link Class}.
+	 * @param pClass the {@link Class class}.
+	 * @param pStaticMethodName the {@link String static method name}.
 	 */
-	public ConstructorInvokingFunction(Class<?> pClazz)
+	public StaticFunctionInvokingFunction(Class<?> pClass, String pStaticMethodName)
 	{
 		super();
 		
-		try
+		for (Method method : pClass.getMethods())
 		{
-			constructors = pClazz.getConstructors();
-		}
-		catch (SecurityException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (method.getName().equals(pStaticMethodName))
+			{
+				methods.add(method);
+			}
 		}
 	}
 	
@@ -75,11 +74,6 @@ public class ConstructorInvokingFunction extends VarArgFunction
 	@Override
 	public Varargs invoke(Varargs pArgs)
 	{
-		if (constructors == null || constructors.length == 0)
-		{
-			throw new LuaError("Object can not be created, no constructors available.");
-		}
-		
 		Object[] parameters = new Object[pArgs.narg()];
 		Class<?>[] parameterClasses = new Class[pArgs.narg()];
 		
@@ -107,11 +101,11 @@ public class ConstructorInvokingFunction extends VarArgFunction
 			}
 		}
 		
-		Constructor<?> matchingConstructor = null;
+		Method matchingMethod = null;
 		
-		for (Constructor<?> constructor : constructors)
+		for (Method method : methods)
 		{
-			Class<?>[] parameterTypes = constructor.getParameterTypes();
+			Class<?>[] parameterTypes = method.getParameterTypes();
 			
 			if (parameterTypes.length == pArgs.narg())
 			{
@@ -123,21 +117,18 @@ public class ConstructorInvokingFunction extends VarArgFunction
 					}
 				}
 				
-				matchingConstructor = constructor;
+				matchingMethod = method;
 			}
 		}
 		
-		if (matchingConstructor == null)
+		if (matchingMethod == null)
 		{
-			throw new LuaError("Object can not be created, no fitting constructor available.");
+			throw new LuaError("No fitting method found.");
 		}
 		
 		try
 		{
-			Object instance = matchingConstructor.newInstance(parameters);
-			LuaValue luaInstance = new EventHandlerInterceptingWrapper(instance);
-			
-			return luaInstance;
+			return CoerceJavaToLua.coerce(matchingMethod.invoke(null, parameters));
 		}
 		catch (Exception e)
 		{
@@ -145,4 +136,4 @@ public class ConstructorInvokingFunction extends VarArgFunction
 		}
 	}
 	
-}	// ConstructorInvokingFunction
+}	// StaticFunctionInvokingFunction

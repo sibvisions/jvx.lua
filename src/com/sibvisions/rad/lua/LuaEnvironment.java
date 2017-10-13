@@ -16,6 +16,7 @@
 
 package com.sibvisions.rad.lua;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,7 @@ import javax.rad.genui.UIFactoryManager;
 import javax.rad.ui.IComponent;
 
 import org.luaj.vm2.Globals;
+import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.compiler.LuaC;
@@ -30,13 +32,13 @@ import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
-import org.luaj.vm2.lib.jse.CoerceLuaToJava;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 import org.luaj.vm2.luajc.LuaJC;
 
 import com.sibvisions.rad.lua.libs.GuiLib;
 import com.sibvisions.rad.lua.libs.JVxLib;
+import com.sibvisions.rad.lua.libs.JavaLib;
 import com.sibvisions.util.type.ExceptionUtil;
 
 /**
@@ -59,7 +61,7 @@ public class LuaEnvironment
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
 	/** The {@link Globals} which are used. */
-	private Globals globals = null;
+	protected Globals globals = null;
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Initialization
@@ -74,6 +76,8 @@ public class LuaEnvironment
 		
 		globals = new Globals();
 		
+		LoadState.install(globals);
+		
 		LuaC.install(globals);
 		LuaJC.install(globals);
 		
@@ -85,6 +89,8 @@ public class LuaEnvironment
 		
 		globals.load(new JseBaseLib());
 		globals.load(new JseMathLib());
+		
+		globals.load(new JavaLib());
 		
 		globals.load(new JVxLib());
 		
@@ -101,7 +107,7 @@ public class LuaEnvironment
 	 * @param pStackTrace the stack trace from which to extract it.
 	 * @return a new Lua stack trace. Can be empty.
 	 */
-	private static final StackTraceElement[] extractLuaStacktrace(StackTraceElement[] pStackTrace)
+	protected static final StackTraceElement[] extractLuaStacktrace(StackTraceElement[] pStackTrace, String pScriptName)
 	{
 		if (pStackTrace == null || pStackTrace.length == 0)
 		{
@@ -114,7 +120,7 @@ public class LuaEnvironment
 		{
 			String fileName = stackTraceElement.getFileName();
 			
-			if (fileName != null && fileName.startsWith(CHUNKNAME))
+			if (fileName != null && fileName.startsWith(pScriptName))
 			{
 				String methodName = stackTraceElement.getMethodName();
 				
@@ -138,6 +144,61 @@ public class LuaEnvironment
 		return luaStackTrace.toArray(new StackTraceElement[luaStackTrace.size()]);
 	}
 	
+	public LuaValue execute(Path pScriptPath) throws LuaException
+	{
+		try
+		{
+			return globals.loadfile(pScriptPath.toAbsolutePath().toString()).call();
+		}
+		catch (LuaError e)
+		{
+			throw new LuaException(e);
+		}
+		catch (Exception e)
+		{
+			throw new LuaException("Failed to execute given script \"" + pScriptPath.toString() + "\": " + e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Executs the given script returns the {@link IComponent}, if any.
+	 * 
+	 * @param pLuaScript the Lua script to execute.
+	 * @return the returned {@link LuaValue}.
+	 * @throws LuaException if execution of the Lua script failed.
+	 */
+	public LuaValue execute(String pLuaScript) throws LuaException
+	{
+		return execute(pLuaScript, CHUNKNAME);
+	}
+	
+	/**
+	 * Executs the given script returns the {@link IComponent}, if any.
+	 * 
+	 * @param pLuaScript the Lua script to execute.
+	 * @param pScriptName the name of the script that is executed.
+	 * @return the returned {@link LuaValue}.
+	 * @throws LuaException if execution of the Lua script failed.
+	 */
+	public LuaValue execute(String pLuaScript, String pScriptName) throws LuaException
+	{
+		try
+		{
+			return globals.load(pLuaScript, pScriptName).call();
+		}
+		catch (LuaError e)
+		{
+			LuaError error = new LuaError(e.getMessage());
+			error.setStackTrace(extractLuaStacktrace(e.getStackTrace(), pScriptName));
+			
+			throw new LuaException(ExceptionUtil.dump(error, false), e);
+		}
+		catch (Exception e)
+		{
+			throw new LuaException("Failed to execute given script: " + e.getMessage(), e);
+		}
+	}
+	
 	/**
 	 * Gets the {@link Globals} of this environment.
 	 * 
@@ -146,34 +207,6 @@ public class LuaEnvironment
 	public Globals getGlobals()
 	{
 		return globals;
-	}
-	
-	/**
-	 * Executs the given script returns the {@link IComponent}, if any.
-	 * 
-	 * @param pLuaScript the Lua script to execute.
-	 * @return the returned {@link IComponent}, if any.
-	 * @throws LuaException if execution of the Lua script failed.
-	 */
-	public IComponent execute(String pLuaScript) throws LuaException
-	{
-		try
-		{
-			LuaValue luaValue = globals.load(pLuaScript, CHUNKNAME).call();
-			return (IComponent)CoerceLuaToJava.coerce(luaValue, IComponent.class);
-		}
-		catch (LuaError e)
-		{
-			LuaError error = new LuaError(e.getMessage());
-			error.setStackTrace(extractLuaStacktrace(e.getStackTrace()));
-			
-			throw new LuaException(ExceptionUtil.dump(error, false), e);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			throw new LuaException("Failed to execute given script: " + e.getMessage(), e);
-		}
 	}
 	
 }	// LuaEnvironment

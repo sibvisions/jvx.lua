@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.sibvisions.rad.lua.libs.wrappers;
+package com.sibvisions.rad.lua.support.wrappers;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
