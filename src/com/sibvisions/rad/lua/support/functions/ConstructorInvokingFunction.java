@@ -17,6 +17,8 @@
 package com.sibvisions.rad.lua.support.functions;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
@@ -24,6 +26,8 @@ import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.jse.AbstractInterceptingJavaInstance;
 import org.luaj.vm2.lib.jse.CoerceLuaToJava;
+
+import com.sibvisions.rad.lua.CoerceEnum;
 
 /**
  * The {@link ConstructorInvokingFunction} is a {@link VarArgFunction} extension
@@ -86,60 +90,90 @@ public class ConstructorInvokingFunction extends VarArgFunction
 		}
 		
 		Object[] parameters = new Object[pArgs.narg()];
-		Class<?>[] parameterClasses = new Class[pArgs.narg()];
+		
+		List<Constructor<?>> remainingConstructors = new ArrayList<>();
+		
+		for (Constructor<?> constructor : constructors)
+		{
+			if (constructor.getParameterCount() == pArgs.narg())
+			{
+				remainingConstructors.add(constructor);
+			}
+		}
 		
 		for (int index = 0; index < pArgs.narg(); index++)
 		{
+			Class<?> currentClass = null;
+			
 			if (pArgs.isnil(index + 1))
 			{
-				parameterClasses[index] = Object.class;
+				currentClass = Object.class;
 				parameters[index] = null;
 			}
 			else if (pArgs.isnumber(index + 1))
 			{
-				parameterClasses[index] = int.class;
+				currentClass = int.class;
 				parameters[index] = Integer.valueOf(pArgs.toint(index + 1));
 			}
 			else if (pArgs.isstring(index + 1))
 			{
-				parameterClasses[index] = String.class;
+				currentClass = String.class;
 				parameters[index] = pArgs.tojstring(index + 1);
 			}
 			else if (pArgs.isuserdata(index + 1))
 			{
-				parameterClasses[index] = Object.class;
 				parameters[index] = CoerceLuaToJava.coerce(pArgs.arg(index + 1), Object.class);
-			}
-		}
-		
-		Constructor<?> matchingConstructor = null;
-		
-		for (Constructor<?> constructor : constructors)
-		{
-			Class<?>[] parameterTypes = constructor.getParameterTypes();
-			
-			if (parameterTypes.length == pArgs.narg())
-			{
-				for (int index = 0; index < parameterTypes.length; index++)
+				
+				if (parameters[index] != null)
 				{
-					if (!parameterTypes[index].equals(parameterClasses[index]))
+					currentClass = parameters[index].getClass();
+				}
+				else
+				{
+					currentClass = Object.class;
+				}
+			}
+			
+			List<Constructor<?>> fittingConstructors = new ArrayList<>();
+			
+			for (Constructor<?> constructor : remainingConstructors)
+			{
+				Class<?> expectedClass = constructor.getParameterTypes()[index];
+				
+				if (expectedClass.isAssignableFrom(currentClass)
+						|| (expectedClass.equals(long.class) && currentClass.equals(int.class))
+						|| (expectedClass.equals(double.class) && currentClass.equals(float.class)))
+				{
+					fittingConstructors.add(constructor);
+				}
+				else if (Enum.class.isAssignableFrom(expectedClass) && currentClass.equals(String.class))
+				{
+					@SuppressWarnings("unchecked")
+					Object value = CoerceEnum.luaToJava(pArgs.arg(index + 1), null, (Class<Enum<?>>)expectedClass);
+					
+					if (value != null)
 					{
-						break;
+						parameters[index] = value;
+						fittingConstructors.add(constructor);
 					}
 				}
-				
-				matchingConstructor = constructor;
 			}
+			
+			remainingConstructors = fittingConstructors;
 		}
 		
-		if (matchingConstructor == null)
+		if (remainingConstructors.isEmpty())
 		{
 			throw new LuaError("Object can not be created, no fitting constructor available.");
+		}
+		else if (remainingConstructors.size() > 1)
+		{
+			throw new LuaError("Multiple matching constructors found.");
 		}
 		
 		try
 		{
-			Object instance = matchingConstructor.newInstance(parameters);
+			Object instance = remainingConstructors.get(0).newInstance(parameters);
 			LuaValue luaInstance = wrapperClass.getConstructor(Object.class).newInstance(instance);
 			
 			return luaInstance;
