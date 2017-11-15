@@ -8,8 +8,8 @@ scripts, which can be executed at runtime.
 
 # Usage
 
-Add the project/jar and the necessary dependencies to a project. From there one
-case instanciate a new Lua environment and execute scripts on it:
+Add the project/jar and the necessary dependencies to a project. From there on
+just create a new `LuaEnvironment` and execute scripts on it:
 
 ```java
 LuaEnvironment luaEnvironment = new LuaEnvironment();
